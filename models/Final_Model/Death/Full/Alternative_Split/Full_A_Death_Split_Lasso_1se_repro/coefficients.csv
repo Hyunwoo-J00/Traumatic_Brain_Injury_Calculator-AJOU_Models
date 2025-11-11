@@ -1,0 +1,34 @@
+"feature","coef"
+"(Intercept)",-2.71427640164696
+"Age",0.0110126790719572
+"arr_GCS_derived",-0.0910864209111447
+"InjuryHx.InjCause1",0
+"InjuryHx.InjCause3",0
+"InjuryHx.InjCause88",0
+"arr_pp_sizebilaterally mydriatic",0.575035096605216
+"arr_pp_promptbilateral absence",1.25344644054523
+"head_neck_AIS4",0
+"head_neck_AIS5",1.10693884940138
+"EDHpresent",-0.578807299977754
+"SAHpresent",0.413160103437947
+"DAIpresent",-0.0506723556131535
+"ns(aPTT, df = 4)1",-0.175198828640916
+"ns(aPTT, df = 4)2",1.45896250804847
+"ns(aPTT, df = 4)3",0
+"ns(aPTT, df = 4)4",2.06413818351307
+"ns(CRP, df = 4)1",-0.143743472773604
+"ns(CRP, df = 4)2",-0.642675183450212
+"ns(CRP, df = 4)3",0
+"ns(CRP, df = 4)4",0.872503945567138
+"ns(AST, df = 4)1",0.0480171242622014
+"ns(AST, df = 4)2",0.387373116229077
+"ns(AST, df = 4)3",0
+"ns(AST, df = 4)4",0
+"ns(Platelet, df = 4)1",0
+"ns(Platelet, df = 4)2",-0.834019744711736
+"ns(Platelet, df = 4)3",0
+"ns(Platelet, df = 4)4",-0.0264636959327888
+"ns(Sodium, df = 4)1",-0.0194351092514756
+"ns(Sodium, df = 4)2",0
+"ns(Sodium, df = 4)3",0
+"ns(Sodium, df = 4)4",0

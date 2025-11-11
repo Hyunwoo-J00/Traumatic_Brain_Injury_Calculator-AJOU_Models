@@ -1,0 +1,6 @@
+Age
+arr_GCS_derived
+arr_pp_sizebilaterally mydriatic
+arr_pp_promptbilateral absence
+head_neck_AIS4
+head_neck_AIS5

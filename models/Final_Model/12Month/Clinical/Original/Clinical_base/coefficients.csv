@@ -1,0 +1,12 @@
+"feature","coef"
+"(Intercept)",-3.09172868807519
+"Age",0.0222205776815394
+"arr_statusComa",0.642853850656831
+"arr_statusDrowsy",0
+"arr_statusSemicoma",0.611511030572844
+"arr_statusStupor",0.223188799517788
+"Upper_Lower_Extremities_imputedBoth Bilateral",1.54372747831535
+"arr_pp_sizebilaterally mydriatic",0.108713518513292
+"arr_pp_promptbilateral absence",0.994434762639785
+"head_neck_AIS4",0.113475637993611
+"head_neck_AIS5",1.18017535727533

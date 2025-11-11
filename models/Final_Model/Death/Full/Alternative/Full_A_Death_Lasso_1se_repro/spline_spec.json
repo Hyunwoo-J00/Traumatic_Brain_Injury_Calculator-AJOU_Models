@@ -1,0 +1,32 @@
+{
+  "aPTT": {
+    "df": 4,
+    "knots": [28, 31, 34],
+    "Boundary.knots": [20, 100],
+    "intercept": false
+  },
+  "CRP": {
+    "df": 4,
+    "knots": [0.16, 1.63, 7.4],
+    "Boundary.knots": [0.02, 30],
+    "intercept": false
+  },
+  "AST": {
+    "df": 4,
+    "knots": [26, 34, 53],
+    "Boundary.knots": [15, 300],
+    "intercept": false
+  },
+  "Platelet": {
+    "df": 4,
+    "knots": [165, 205, 246],
+    "Boundary.knots": [12, 716],
+    "intercept": false
+  },
+  "Sodium": {
+    "df": 4,
+    "knots": [138, 140, 142],
+    "Boundary.knots": [128, 148],
+    "intercept": false
+  }
+}

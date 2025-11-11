@@ -1,0 +1,32 @@
+Age
+arr_GCS_derived
+InjuryHx.InjCause1
+InjuryHx.InjCause3
+InjuryHx.InjCause88
+arr_pp_sizebilaterally mydriatic
+arr_pp_promptbilateral absence
+head_neck_AIS4
+head_neck_AIS5
+EDHpresent
+SAHpresent
+DAIpresent
+ns(aPTT, df = 4)1
+ns(aPTT, df = 4)2
+ns(aPTT, df = 4)3
+ns(aPTT, df = 4)4
+ns(CRP, df = 4)1
+ns(CRP, df = 4)2
+ns(CRP, df = 4)3
+ns(CRP, df = 4)4
+ns(AST, df = 4)1
+ns(AST, df = 4)2
+ns(AST, df = 4)3
+ns(AST, df = 4)4
+ns(Platelet, df = 4)1
+ns(Platelet, df = 4)2
+ns(Platelet, df = 4)3
+ns(Platelet, df = 4)4
+ns(Sodium, df = 4)1
+ns(Sodium, df = 4)2
+ns(Sodium, df = 4)3
+ns(Sodium, df = 4)4

@@ -1,0 +1,743 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>AJOU TBI Prognostic Calculator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+  <!-- 1) config.json에서 API 주소 로드 -->
+  <script>
+    window.API = "";
+    window.configReady = (async () => {
+      try {
+        const r = await fetch("config.json?ts=" + Date.now(), { cache: "no-store" });
+        const cfg = await r.json();
+        window.API = cfg.api_base || "";
+      } catch (e) {
+        window.API = "";
+      }
+    })();
+  </script>
+
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto;max-width:960px;margin:32px auto;padding:0 12px}
+    h1{margin:0 0 6px}
+    .muted{color:#666;font-size:12px;margin-bottom:12px}
+    .card{border:1px solid #ddd;border-radius:12px;padding:16px;margin:14px 0}
+    .row{display:flex;gap:12px;align-items:center;margin:10px 0}
+    label{width:320px;font-weight:600}
+    input,select{flex:1;padding:8px;border:1px solid #ccc;border-radius:8px}
+    button{padding:10px 16px;border:1px solid #333;background:#111;color:#fff;border-radius:10px;cursor:pointer}
+    button.secondary{background:#fff;color:#111}
+    button:disabled{opacity:.6;cursor:not-allowed}
+    table{border-collapse:collapse;width:100%}
+    th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}
+    .ok{color:#0a7;font-weight:700}
+    .warn{color:#c70;font-weight:700}
+    .pill{display:inline-flex;gap:8px;border:1px solid #ddd;border-radius:999px;padding:6px}
+    .pill label{width:auto;font-weight:500}
+    .subtle{font-size:12px;color:#666}
+    .invalid{outline:2px solid #d33}
+    .flex-between{display:flex;gap:12px;align-items:center;justify-content:space-between}
+    .stack{display:flex;flex-direction:column;gap:4px;flex:1}
+    @media (max-width:720px){ label{width:40%} }
+  </style>
+</head>
+<body>
+  <h1>AJOU TBI Prognostic Calculator</h1>
+  <div id="metaLine" class="muted">Loading model...</div>
+
+  <div class="card">
+    <h3>Target</h3>
+    <div class="row">
+      <label>Outcome</label>
+      <select id="outcome">
+        <option value="death14" selected>14 Day Death</option>
+        <option value="3m">3-Month Unfavorable Outcome</option>
+        <option value="6m">6-Month Unfavorable Outcome</option>
+        <option value="12m">12-Month Unfavorable Outcome</option>
+      </select>
+    </div>
+
+    <div class="row">
+      <label id="lblAvail">Is 'Level of Consciousness' available?</label>
+      <div class="pill">
+        <label><input type="radio" name="locAvail" value="yes" checked> Yes</label>
+        <label><input type="radio" name="locAvail" value="no"> No</label>
+      </div>
+    </div>
+    <div class="row">
+      <label>Is CT data available?</label>
+      <div class="pill">
+        <label><input type="radio" name="ctAvail" value="no" checked> No</label>
+        <label><input type="radio" name="ctAvail" value="yes"> Yes</label>
+      </div>
+    </div>
+    <div class="row">
+      <label>Is Lab data available?</label>
+      <div class="pill">
+        <label><input type="radio" name="labAvail" value="no" checked> No</label>
+        <label><input type="radio" name="labAvail" value="yes"> Yes</label>
+      </div>
+    </div>
+    <div class="subtle">
+      Yes (LOC) → Base, No (LOC) → Alternative. CT Yes → CT 모델, CT Yes & Lab Yes → Full 모델.
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Clinical variables</h3>
+    <div class="row">
+      <label>Age (years)</label>
+      <input id="age" type="number" min="18" max="90" step="1" placeholder="18–90">
+    </div>
+
+    <!-- Base only -->
+    <div class="row base-only" id="row_loc">
+      <label>Level of Consciousness</label>
+      <select id="loc">
+        <option value="">Select…</option>
+        <option>Alert</option>
+        <option>Drowsy</option>
+        <option>Stupor</option>
+        <option>Semicoma</option>
+        <option>Coma</option>
+      </select>
+    </div>
+
+    <!-- Alternative only -->
+    <div class="row alt-only" id="row_gcs" style="display:none;">
+      <label>GCS Score</label>
+      <input id="gcs" type="number" min="3" max="15" step="1" placeholder="3–15">
+    </div>
+
+    <div class="row" id="injRow">
+      <label>Injury Cause</label>
+      <select id="injury">
+        <option value="">Select…</option>
+        <option value="1">Road traffic accident</option>
+        <option value="2">Incidental fall</option>
+        <option value="3">Violence or non-intentional injury</option>
+        <option value="88">Unknown</option>
+      </select>
+    </div>
+
+    <!-- 모델에 없으면 자동 숨김 -->
+    <div class="row" id="row_mydriasis">
+      <label>Bilateral Mydriasis</label>
+      <select id="mydriasis">
+        <option value="">Select…</option>
+        <option>Yes</option>
+        <option>No</option>
+      </select>
+    </div>
+
+    <div class="row" id="row_nonreactive">
+      <label>Bilateral Non-Reactive Pupil</label>
+      <select id="nonreactive">
+        <option value="">Select…</option>
+        <option>Yes</option>
+        <option>No</option>
+      </select>
+    </div>
+
+    <div class="row" id="row_ais">
+      <label>Head/Neck AIS</label>
+      <select id="ais">
+        <option value="">Select…</option>
+        <option>3</option>
+        <option>4</option>
+        <option>5</option>
+      </select>
+    </div>
+
+    <!-- Clinical extras (Quadriplegia) -->
+    <div id="clinExtra"></div>
+  </div>
+
+  <div class="card ct-block" style="display:none;">
+    <h3>CT variables</h3>
+    <div id="ctVars"></div>
+  </div>
+
+  <div class="card lab-block" style="display:none;">
+    <h3>Lab variables</h3>
+    <div id="labVars"></div>
+  </div>
+
+  <div class="card">
+    <h3>Threshold</h3>
+    <div class="row">
+      <label>Decision threshold</label>
+      <input id="thr" type="number" step="0.01" min="0" max="1" value="0.5"/>
+    </div>
+    <div class="row">
+      <div class="stack">
+        <button id="predictBtn">Calculate</button>
+      </div>
+      <div class="stack" style="align-items:flex-end">
+        <button id="resetBtn" class="secondary">Reset all inputs</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="results" class="card" style="display:none;">
+    <h3>Results</h3>
+    <table>
+      <thead><tr><th>Model</th><th>Probability</th><th>Prediction</th></tr></thead>
+      <tbody id="resultsBody"></tbody>
+    </table>
+    <div class="muted" id="modelId"></div>
+  </div>
+
+  <!-- 2) 메인 스크립트 -->
+  <script>
+    let API = "";
+
+    /* ====== 라벨/단위 ====== */
+    const DISPLAY_NAME = {
+      contusion: "Contusion",
+      MidlineShift: "Midline shift",
+      basal_cistern_compression: "Cisternal compression",
+      "Alk.Phosphatase": "Alkaline Phosphatase",
+      Upper_Lower_Extremities_imputed: "Quadriplegia",
+      facial_fracture: "Facial fracture"
+    };
+    const UNITS = {
+      aPTT: "sec",
+      CRP: "mg/dL",
+      Platelet: "×10^3/μL",
+      AST: "U/L",
+      Sodium: "mmol/L",
+      "Alk.Phosphatase": "U/L",
+      Albumin: "g/dL",
+      BUN: "mg/dL"
+    };
+
+    /* ====== Lab Boundary (고정) ====== */
+    const STATIC_BOUNDS = {
+      AST:  {min:15, max:300},
+      "Alk.Phosphatase": {min:30, max:180},
+      Albumin: {min:2.2, max:5.3},
+      CRP: {min:0.02, max:30},
+      BUN: {min:2.7, max:162.1},
+      Sodium: {min:128, max:148},
+      Platelet: {min:12, max:716},
+      aPTT: {min:20, max:100}
+    };
+
+    /* ====== Outcome별 Lab 구성 ====== */
+    const LABS_BY_OUTCOME = {
+      death14: ["aPTT","CRP","Sodium","Platelet","AST"],
+      "3m":    ["Alk.Phosphatase","CRP","Sodium","aPTT"],
+      "6m":    ["Alk.Phosphatase","CRP","Albumin","BUN","Sodium","aPTT"],
+      "12m":   ["Alk.Phosphatase","Albumin","CRP","aPTT"]
+    };
+
+    /* ====== Clinical 매핑 ====== */
+    const MAP_CLINICAL_BASE = {
+      age: "Age",
+      loc: "arr_status",
+      injury: "InjuryHx.InjCause",
+      mydriasis: "arr_pp_size",
+      nonreactive: "arr_pp_prompt",
+      ais: "head_neck_AIS",
+      qpl: "Upper_Lower_Extremities_imputed"
+    };
+    const MAP_CLINICAL_ALT = {
+      age: "Age",
+      gcs: "arr_GCS_derived",
+      injury: "InjuryHx.InjCause",
+      mydriasis: "arr_pp_size",
+      nonreactive: "arr_pp_prompt",
+      ais: "head_neck_AIS",
+      qpl: "Upper_Lower_Extremities_imputed"
+    };
+
+    /* ====== 상태 저장 (입력 유지) ====== */
+    const formState = {};
+    function snapshotForm(){
+      document.querySelectorAll('input, select').forEach(el=>{
+        if (el.id) formState[el.id] = el.value;
+      });
+      document.querySelectorAll('.ct-var').forEach(sel=>{
+        formState['ct:'+sel.dataset.var] = sel.value;
+      });
+      document.querySelectorAll('.lab-var').forEach(inp=>{
+        formState['lab:'+inp.dataset.var] = inp.value;
+      });
+    }
+    function restoreForm(){
+      document.querySelectorAll('input, select').forEach(el=>{
+        if (el.id && Object.prototype.hasOwnProperty.call(formState, el.id)) el.value = formState[el.id];
+      });
+      document.querySelectorAll('.ct-var').forEach(sel=>{
+        const k = 'ct:'+sel.dataset.var;
+        if (Object.prototype.hasOwnProperty.call(formState, k)) sel.value = formState[k];
+      });
+      document.querySelectorAll('.lab-var').forEach(inp=>{
+        const k = 'lab:'+inp.dataset.var;
+        if (Object.prototype.hasOwnProperty.call(formState, k)) inp.value = formState[k];
+      });
+    }
+
+    /* ====== 유틸 ====== */
+    function normalizeOutcome(){ return document.getElementById('outcome').value; }
+    function currentKey(){
+      const locYes = document.querySelector('input[name="locAvail"]:checked')?.value === "yes";
+      const ctYes  = document.querySelector('input[name="ctAvail"]:checked')?.value === "yes";
+      const labYes = document.querySelector('input[name="labAvail"]:checked')?.value === "yes";
+      if (ctYes && labYes && locYes)  return "full_base";
+      if (ctYes && labYes && !locYes) return "full_alt";
+      if (ctYes && !labYes && locYes) return "ct_base";
+      if (ctYes && !labYes && !locYes) return "ct_alt";
+      if (!ctYes && locYes)            return "clinical_base";
+      return "clinical_alt";
+    }
+    function isBaseKey(key){ return /_base$/.test(key) || key === "clinical_base"; }
+
+    /* ====== CT/Lab 변수명 별칭 해결 ====== */
+    const CT_ALIASES = {
+      EDH: ["EDH","Imaging.EDH"],
+      SAH: ["SAH","Imaging.SAH"],
+      IVH: ["IVH","Imaging.IVH"],
+      contusion: ["contusion","Imaging.Contusion","Imaging.contusion"],
+      MidlineShift: ["MidlineShift","Imaging.MidlineShift","Imaging.midlineShift"],
+      basal_cistern_compression: [
+        "basal_cistern_compression","Imaging.CisternalCompression","Imaging.basal_cistern_compression"
+      ],
+      DAI: ["DAI","Imaging.DAI"],
+      facial_fracture: ["facial_fracture","Imaging.FacialFracture","Imaging.facial_fracture"]
+    };
+
+    function resolveServerVar(fs, varsSet, name){
+      const cands = [
+        name,
+        `Imaging.${name}`,
+        `Lab.${name}`,
+        name.charAt(0).toUpperCase()+name.slice(1),
+        `Imaging.${name.charAt(0).toUpperCase()+name.slice(1)}`
+      ];
+      const fromAlias = (CT_ALIASES[name] || []);
+      for (const nm of [...fromAlias, ...cands]) {
+        if ((fs && Object.prototype.hasOwnProperty.call(fs, nm)) || (varsSet && varsSet.has(nm))) return nm;
+      }
+      return null;
+    }
+
+    /* 가시성 토글 */
+    function applyVisibility(){
+      const key = currentKey();
+      const isBase = (key === "clinical_base" || key === "ct_base" || key === "full_base");
+      document.getElementById("row_loc").style.display = isBase ? "" : "none";
+      document.getElementById("row_gcs").style.display = isBase ? "none" : "";
+
+      const ctYes  = document.querySelector('input[name="ctAvail"]:checked')?.value === "yes";
+      const labYes = document.querySelector('input[name="labAvail"]:checked')?.value === "yes";
+      document.querySelector(".ct-block").style.display  = ctYes ? "" : "none";
+      document.querySelector(".lab-block").style.display = (ctYes && labYes) ? "" : "none";
+    }
+
+    /* (신규) 메타 적용 전 기본 라벨 - ReferenceError 방지용 */
+    function updateAvailLabel(){
+      const lbl = document.getElementById('lblAvail');
+      if (!lbl) return;
+      lbl.textContent = "Is 'Level of Consciousness' available?";
+    }
+
+    /* 3m/6m/12m 라벨 변경(메타 기준) */
+    function updateAvailLabelByMeta(meta){
+      const lbl = document.getElementById('lblAvail');
+      if (!lbl) return;
+      const vars = new Set(meta.formula_vars || []);
+      const fs   = meta.factor_spec || {};
+      const hasQPL = vars.has("Upper_Lower_Extremities_imputed") ||
+                     Object.prototype.hasOwnProperty.call(fs, "Upper_Lower_Extremities_imputed");
+      lbl.textContent = hasQPL
+        ? "Is 'Level of Consciousness' and 'Manual Motor Test (Quadriplegia)' available?"
+        : "Is 'Level of Consciousness' available?";
+    }
+
+    async function fetchJSON(url){
+      const res = await fetch(url, {
+        headers: {
+          'Accept': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        },
+        cache: 'no-store'
+      });
+      const ct = res.headers.get('content-type') || '';
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status} (${ct})`);
+      }
+      if (!ct.includes('application/json')) {
+        const txt = await res.text();
+        throw new Error(`Non-JSON response (${ct}): ${txt.slice(0,120)}`);
+      }
+      return res.json();
+    }
+
+    function labelOf(varName){
+      if (varName === "head_neck_AIS") return "Head/Neck AIS";
+      return DISPLAY_NAME[varName] || varName;
+    }
+
+    /* ====== CT/Lab 렌더 ====== */
+    function renderCtVars(meta){
+      const cont = document.getElementById('ctVars'); cont.innerHTML = "";
+      const fs = meta.factor_spec || {};
+      const varsSet = new Set(meta.formula_vars || []);
+      const CAND = ["EDH","SAH","IVH","contusion","MidlineShift","basal_cistern_compression","DAI","facial_fracture"];
+      let rendered = 0;
+      CAND.forEach(v => {
+        const serverName = resolveServerVar(fs, varsSet, v);
+        if (!serverName) return;
+        const row = document.createElement("div"); row.className="row";
+        const lab = document.createElement("label"); lab.textContent = labelOf(v);
+        const sel = document.createElement("select"); sel.className = "ct-var"; sel.dataset.var = serverName;
+        sel.innerHTML = `<option value="">Select…</option><option>Present</option><option>Absent</option>`;
+        row.appendChild(lab); row.appendChild(sel); cont.appendChild(row);
+        rendered++;
+      });
+      console.log(`[ct] rendered ${rendered} vars`);
+    }
+
+    function renderLabVars(){
+      const cont = document.getElementById('labVars'); cont.innerHTML = "";
+      const oc = normalizeOutcome();
+      const labs = LABS_BY_OUTCOME[oc] || [];
+      const varsSet = new Set(window.__formulaVars || []);
+      const fs = window.__factorSpec || {};
+      labs.forEach(v => {
+        const serverName = resolveServerVar(fs, varsSet, v) || v;
+        const row = document.createElement("div"); row.className="row";
+        const b = STATIC_BOUNDS[v] || null;
+        const unit = UNITS[v] ? ` (${UNITS[v]})` : "";
+        const label = document.createElement("label");
+        label.textContent = (DISPLAY_NAME[v] || v) + unit + (b?` [${b.min}–${b.max}]`:"");
+
+        const inp = document.createElement("input");
+        inp.type="number"; inp.step="any"; inp.className="lab-var"; inp.dataset.var = serverName;
+        if (b){ inp.min = b.min; inp.max = b.max; inp.placeholder = `${b.min}–${b.max}`; }
+
+        row.appendChild(label); row.appendChild(inp); cont.appendChild(row);
+      });
+      console.log(`[lab] outcome=${oc}, rendered=${labs.length}`);
+    }
+
+    function renderClinicalExtras(meta){
+      const cont = document.getElementById('clinExtra'); 
+      cont.innerHTML = "";
+
+      const vars = new Set(meta.formula_vars || []);
+      const fs   = meta.factor_spec || {};
+      const has = (name) => vars.has(name) || Object.prototype.hasOwnProperty.call(fs, name);
+
+      // 기본 임상 항목 가시성
+      document.getElementById('row_mydriasis').style.display = has("arr_pp_size")   ? "" : "none";
+      document.getElementById('row_nonreactive').style.display = has("arr_pp_prompt") ? "" : "none";
+      document.getElementById('row_ais').style.display        = has("head_neck_AIS")  ? "" : "none";
+
+      // ★ Quadriplegia는 모델에 있을 때만 렌더 (Alt에 없으면 표시 안 됨)
+      if (has("Upper_Lower_Extremities_imputed")){
+        const row = document.createElement("div"); row.className="row";
+        const lab = document.createElement("label"); lab.textContent = "Quadriplegia";
+        const sel = document.createElement("select"); sel.id="qpl";
+        sel.innerHTML = `<option value="">Select…</option>
+                         <option value="yes">Yes</option>
+                         <option value="no">No</option>`;
+        row.appendChild(lab); row.appendChild(sel); 
+        cont.appendChild(row);
+      }
+    }
+
+    /* ====== 서버 메타 로드 ====== */
+    async function loadMeta(){
+      if (!API) throw new Error("API base URL not set.");
+      const key = currentKey();
+      const outcome = normalizeOutcome();
+      const url = `${API}/meta?model=${key}&outcome=${outcome}`;
+      try{
+        console.log("[meta] GET", url);
+        const meta = await fetchJSON(url);
+        if (meta.error) {
+          document.getElementById('metaLine').textContent = `META ERROR: ${meta.error} (key=${key}, outcome=${outcome})`;
+          console.warn("[meta] server error:", meta);
+          renderCtVars({factor_spec:{}, formula_vars:[]});
+          renderLabVars();
+          return;
+        }
+        document.getElementById('metaLine').textContent = `Model: ${meta.model_id} · Target: ${meta.target}`;
+        window.__factorSpec = meta.factor_spec || {};
+        window.__formulaVars = (meta.formula_vars || []).map(v=>String(v));
+        console.log("[meta] factor_spec keys:", Object.keys(window.__factorSpec));
+        console.log("[meta] formula_vars:", window.__formulaVars);
+
+        renderCtVars(meta);
+        renderLabVars();
+        renderClinicalExtras(meta);
+        updateAvailLabelByMeta(meta);
+        restoreForm();
+        await maybeHideInjury(key, outcome);
+      }catch(e){
+        console.error("[meta] fetch failed:", e, "URL:", url);
+        document.getElementById('metaLine').textContent = `META FETCH FAILED: ${e?.message || e} — ${url}`;
+        renderCtVars({factor_spec:{}, formula_vars:[]});
+        renderLabVars();
+      }
+    }
+
+    async function maybeHideInjury(key, outcome){
+      try{
+        if (!API) return;
+        const data = await fetchJSON(`${API}/coef?model=${key}&outcome=${outcome}`);
+        const pairs = (data?.feature || []).map((f,i)=>({feature:f, coef:data.coef[i]}));
+        const injKey = "InjuryHx.InjCause";
+        const rel = pairs.filter(o => typeof o.feature === "string" && o.feature.indexOf(injKey) === 0);
+        const allZero = rel.length>0 && rel.every(o => Math.abs(Number(o.coef)||0) < 1e-12);
+        document.getElementById('injRow').style.display = allZero ? 'none' : '';
+      }catch(e){ console.warn("coef check failed:", e); }
+    }
+
+    /* ====== 인코더 ====== */
+    function encodePresentAbsent(displayValue, vname, factorSpec){
+      const wantPresent = String(displayValue).toLowerCase() === "present";
+      const levels = ((factorSpec?.[vname]?.levels) || []).map(x => String(x));
+      const lower  = levels.map(x => x.toLowerCase());
+      const iPresent = lower.indexOf('present');
+      const iAbsent  = lower.indexOf('absent');
+      if (iPresent !== -1 && iAbsent !== -1) return wantPresent ? levels[iPresent] : levels[iAbsent];
+      if (levels.includes('1') && levels.includes('0')) return wantPresent ? '1' : '0';
+      const iYes = lower.indexOf('yes'), iNo = lower.indexOf('no');
+      if (iYes !== -1 && iNo !== -1) return wantPresent ? levels[iYes] : levels[iNo];
+      const iTrue = lower.indexOf('true'), iFalse = lower.indexOf('false');
+      if (iTrue !== -1 && iFalse !== -1) return wantPresent ? levels[iTrue] : levels[iFalse];
+      return displayValue;
+    }
+    function encodeYesNoForMydriasis(v){ return v === "Yes" ? "bilaterally mydriatic" : "not mydriatic"; }
+    function encodeYesNoForNonReactive(v){ return v === "Yes" ? "bilateral absence" : "preserved"; }
+
+    /* ====== 입력 읽기 & 제출 검증 ====== */
+    const INJURY_CODE_BY_LABEL = {"Road traffic accident":"1","Incidental fall":"2","Violence or non-intentional injury":"3","Unknown":"88"};
+
+    function buildRow(){
+      const key = currentKey();
+      const outcome = normalizeOutcome();
+      const isBase = isBaseKey(key);
+
+      const age = Number(document.getElementById('age').value);
+      if(!isFinite(age) || age<18 || age>90) throw new Error("Age must be between 18 and 90.");
+
+      if (isBase) {
+        const v = document.getElementById('loc').value; if(!v) throw new Error("Select Level of Consciousness.");
+      } else {
+        const v = Number(document.getElementById('gcs').value); if(!isFinite(v) || v<3 || v>15) throw new Error("Enter GCS Score between 3 and 15.");
+      }
+
+      const injVisible = document.getElementById('injRow').style.display !== 'none';
+      const injurySel = document.getElementById('injury').value;
+
+      const hasMyd = document.getElementById('row_mydriasis').style.display !== 'none';
+      const myd = document.getElementById('mydriasis').value;
+
+      const hasNrp = document.getElementById('row_nonreactive').style.display !== 'none';
+      const nre = document.getElementById('nonreactive').value;
+
+      const hasAIS = document.getElementById('row_ais').style.display !== 'none';
+      const ais = document.getElementById('ais').value;
+
+      const row = {};
+      if (isBase) {
+        row[MAP_CLINICAL_BASE.age] = age;
+        row[MAP_CLINICAL_BASE.loc] = document.getElementById('loc').value;
+        if (injVisible && injurySel) row[MAP_CLINICAL_BASE.injury] = INJURY_CODE_BY_LABEL[injurySel] || String(injurySel);
+        if (hasMyd) { if(!myd) throw new Error("Select Bilateral Mydriasis."); row[MAP_CLINICAL_BASE.mydriasis] = encodeYesNoForMydriasis(myd); }
+        if (hasNrp) { if(!nre) throw new Error("Select Bilateral Non-Reactive Pupil."); row[MAP_CLINICAL_BASE.nonreactive] = encodeYesNoForNonReactive(nre); }
+        if (hasAIS) { if(!ais) throw new Error("Select Head/Neck AIS."); row[MAP_CLINICAL_BASE.ais] = String(ais); }
+      } else {
+        row[MAP_CLINICAL_ALT.age] = age;
+        row[MAP_CLINICAL_ALT.gcs] = Number(document.getElementById('gcs').value);
+        if (injVisible && injurySel) row[MAP_CLINICAL_ALT.injury] = INJURY_CODE_BY_LABEL[injurySel] || String(injurySel);
+        if (hasMyd) { if(!myd) throw new Error("Select Bilateral Mydriasis."); row[MAP_CLINICAL_ALT.mydriasis] = encodeYesNoForMydriasis(myd); }
+        if (hasNrp) { if(!nre) throw new Error("Select Bilateral Non-Reactive Pupil."); row[MAP_CLINICAL_ALT.nonreactive] = encodeYesNoForNonReactive(nre); }
+        if (hasAIS) { if(!ais) throw new Error("Select Head/Neck AIS."); row[MAP_CLINICAL_ALT.ais] = String(ais); }
+      }
+
+      // ★ Quadriplegia: "모델에 있을 때만" 포함 (Alt에 없으면 전송 안 함)
+      const vars = new Set(window.__formulaVars || []);
+      const fs   = window.__factorSpec || {};
+      const hasQPLinModel = vars.has("Upper_Lower_Extremities_imputed") ||
+                            Object.prototype.hasOwnProperty.call(fs, "Upper_Lower_Extremities_imputed");
+
+      if (hasQPLinModel){
+        const val = document.getElementById('qpl')?.value || "";
+        if (!val) throw new Error("Select Quadriplegia.");
+        const mapped = (val === "yes") ? "Both Bilateral" : "Preserved";
+        row[isBase ? MAP_CLINICAL_BASE.qpl : MAP_CLINICAL_ALT.qpl] = mapped;
+      }
+
+      // CT
+      const ctYes  = document.querySelector('input[name="ctAvail"]:checked')?.value === "yes";
+      if (ctYes) {
+        const fs = window.__factorSpec || {};
+        document.querySelectorAll('.ct-var').forEach(sel => {
+          const vname = sel.dataset.var;
+          const dv = sel.value; if (!dv) throw new Error(`Select ${labelOf(vname)}.`);
+          row[vname] = encodePresentAbsent(dv, vname, fs);
+        });
+      }
+
+      // Lab (Outcome별 목록만 전송)
+      const labYes = document.querySelector('input[name="labAvail"]:checked')?.value === "yes";
+      if (ctYes && labYes) {
+        const labs = LABS_BY_OUTCOME[outcome] || [];
+        labs.forEach(name => {
+          const inp = document.querySelector(`.lab-var[data-var="${CSS.escape(name)}"], .lab-var[data-var="${CSS.escape("Lab."+name)}"]`);
+          const valStr = inp?.value ?? "";
+          if (valStr === "") throw new Error(`Enter ${(DISPLAY_NAME[name] || name)}.`);
+          const val = Number(valStr);
+          if (!isFinite(val)) throw new Error(`Enter ${(DISPLAY_NAME[name] || name)} as a number.`);
+          const b = STATIC_BOUNDS[name];
+          if (b && (val < b.min || val > b.max)) {
+            throw new Error(`${(DISPLAY_NAME[name] || name)} must be within ${b.min}–${b.max}.`);
+          }
+          // 실제 서버 전송명(별칭 고려)
+          const serverName = resolveServerVar(window.__factorSpec, new Set(window.__formulaVars||[]), name) || name;
+          row[serverName] = val;
+        });
+      }
+
+      return row;
+    }
+
+    /* ====== 여러 모델 동시 예측 & 에러 가시화 ====== */
+    function keysToRunForCompare(key){
+      const base = isBaseKey(key) ? "base" : "alt";
+      if (key.startsWith("clinical")) return [ `clinical_${base}` ];
+      if (key.startsWith("ct"))       return [ `clinical_${base}`, `ct_${base}` ];
+      if (key.startsWith("full"))     return [ `clinical_${base}`, `ct_${base}`, `full_${base}` ];
+      return [ `clinical_${base}` ];
+    }
+
+    async function runPredict(modelKey, outcome, row, thr){
+      const url = `${API}/predict`;
+      const res = await fetch(url, {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'Accept':'application/json',
+          'ngrok-skip-browser-warning':'true'
+        },
+        body: JSON.stringify({model:modelKey, outcome, data:[row], threshold:thr}),
+        cache: 'no-store'
+      });
+      const ct = res.headers.get('content-type') || '';
+      if (!res.ok) throw new Error(`HTTP ${res.status} (${ct})`);
+      if (!ct.includes('application/json')) {
+        const txt = await res.text();
+        throw new Error(`Non-JSON response (${ct}): ${txt.slice(0,120)}`);
+      }
+      const out = await res.json();
+      if (out.error) {
+        const miss = out?.debug?.miss_before?.join(", ") || "";
+        throw new Error(`PREDICT ERROR: ${out.error}${miss ? " — missing: "+miss : ""}`);
+      }
+      return out;
+    }
+
+    /* ====== 초기화/리프레시 ====== */
+    async function refreshAll(){
+      snapshotForm();
+      updateAvailLabel();      // 기본 문구(메타 전)
+      applyVisibility();
+      await loadMeta();        // 메타 반영 후 updateAvailLabelByMeta(meta)에서 최종 문구 덮어씀
+      applyVisibility();
+    }
+
+    ["locAvail","ctAvail","labAvail"].forEach(name=>{
+      document.querySelectorAll(`input[name="${name}"]`).forEach(r=> r.addEventListener('change', refreshAll));
+    });
+    document.getElementById('outcome').addEventListener('change', refreshAll);
+
+    document.getElementById('resetBtn').addEventListener('click', (e)=>{
+      e.preventDefault();
+      for (const k of Object.keys(formState)) delete formState[k];
+      document.querySelectorAll('input').forEach(el=>{
+        if (el.type === 'radio') return;
+        el.value = "";
+        el.classList.remove('invalid');
+      });
+      document.querySelectorAll('select').forEach(el=> el.value = "");
+      document.getElementById('thr').value = 0.5;
+      document.getElementById('resultsBody').innerHTML = "";
+      document.getElementById('results').style.display = "none";
+    });
+
+    async function init(){
+      await window.configReady;
+      API = window.API;
+
+      if (!API) {
+        document.getElementById('metaLine').textContent =
+          "API base URL is not set. Check config.json (api_base).";
+        return;
+      }
+      if (!API.startsWith("https://")) {
+        document.getElementById('metaLine').textContent =
+          "API must be HTTPS when served from GitHub Pages.";
+        return;
+      }
+
+      updateAvailLabel();  // 초기 기본 문구
+      await refreshAll();
+
+      document.getElementById('predictBtn').addEventListener('click', async ()=>{
+        const btn = document.getElementById('predictBtn');
+        btn.disabled = true;
+        try{
+          const key = currentKey();
+          const outcome = normalizeOutcome();
+          const row = buildRow();
+          const thr = Number(document.getElementById('thr').value || 0.5);
+
+          const keys = keysToRunForCompare(key);
+          const order = {clinical_base:1, clinical_alt:1.5, ct_base:2, ct_alt:2.5, full_base:3, full_alt:3.5};
+          const results = [];
+          for (const k of keys){
+            const out = await runPredict(k, outcome, row, thr);
+            const p = out.prob_14d_death?.[0];
+            const y = out.pred_0_1?.[0];
+            results.push({
+              key:k, model_id: out.model_id || k,
+              p: (p==null||isNaN(p)) ? null : p,
+              y: (y==null) ? null : y,
+              order: order[k] || 99
+            });
+          }
+          results.sort((a,b)=>a.order-b.order);
+
+          const tb = document.getElementById('resultsBody');
+          tb.innerHTML = results.map(r=>`
+            <tr>
+              <td>${r.model_id}</td>
+              <td>${r.p==null?'-':(r.p*100).toFixed(1)+'%'}</td>
+              <td>${r.y==null?'-':(r.y ? '<span class="warn">1 (Positive)</span>' : '<span class="ok">0 (Negative)</span>')}</td>
+            </tr>`).join("");
+
+          document.getElementById('modelId').textContent = results[results.length-1]?.model_id || "";
+          document.getElementById('results').style.display='block';
+        }catch(err){
+          alert(err.message || "Prediction failed");
+          console.error(err);
+        }finally{ btn.disabled = false; }
+      });
+    }
+    init();
+  </script>
+
+  <footer class="muted" style="margin-top:24px">
+    Prognostic calculator of Traumatic Brain Injury, developed at Ajou University Hospital, Neurosurgery.
+    Contact: <a href="mailto:twrillia1109@ajou.ac.kr">twrillia1109@ajou.ac.kr</a>
+  </footer>
+</body>
+</html>

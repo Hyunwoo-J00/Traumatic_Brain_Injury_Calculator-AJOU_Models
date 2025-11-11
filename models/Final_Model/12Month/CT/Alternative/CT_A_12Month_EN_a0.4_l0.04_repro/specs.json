@@ -1,0 +1,12 @@
+{
+  "family": "binomial",
+  "link": "logit",
+  "penalty": "elasticnet",
+  "alpha": 0.4,
+  "lambda": 0.04,
+  "standardize": true,
+  "threshold": 0.5,
+  "formula": "GOSE_12_Unfav ~ Age + arr_GCS_derived + arr_pp_size + arr_pp_prompt + head_neck_AIS + EDH + SAH + IVH + MidlineShift + basal_cistern_compression",
+  "column_count": 11,
+  "coef_on_original_scale": true
+}

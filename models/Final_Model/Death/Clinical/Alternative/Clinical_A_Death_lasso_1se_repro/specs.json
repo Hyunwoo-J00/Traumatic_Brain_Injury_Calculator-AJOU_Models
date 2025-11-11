@@ -1,0 +1,12 @@
+{
+  "family": "binomial",
+  "link": "logit",
+  "penalty": "lasso",
+  "alpha": 1,
+  "lambda": 0.0124,
+  "standardize": true,
+  "threshold": 0.5,
+  "formula": "`14d_death` ~ Age + InjuryHx.InjCause + arr_GCS_derived + arr_pp_size + arr_pp_prompt + head_neck_AIS",
+  "column_count": 9,
+  "coef_on_original_scale": true
+}

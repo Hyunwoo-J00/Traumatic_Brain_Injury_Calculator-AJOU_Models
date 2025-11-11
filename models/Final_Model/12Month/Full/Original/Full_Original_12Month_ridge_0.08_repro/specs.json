@@ -1,0 +1,12 @@
+{
+  "family": "binomial",
+  "link": "logit",
+  "penalty": "ridge",
+  "alpha": 0,
+  "lambda": 0.08,
+  "standardize": true,
+  "threshold": 0.5,
+  "formula": "GOSE_12_Unfav ~ Age + arr_status + Upper_Lower_Extremities_imputed + arr_pp_size + arr_pp_prompt + head_neck_AIS + EDH + SAH + IVH + MidlineShift + basal_cistern_compression + facial_fracture + ns(Alk.Phosphatase, df = 4) + ns(Albumin, df = 4) + ns(CRP, df = 4) + ns(aPTT, df = 4)",
+  "column_count": 32,
+  "coef_on_original_scale": true
+}

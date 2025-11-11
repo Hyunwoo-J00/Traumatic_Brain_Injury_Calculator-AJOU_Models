@@ -1,0 +1,34 @@
+"feature","coef"
+"(Intercept)",-2.51052316405631
+"Age",0.0157186719117747
+"arr_statusComa",0.626258116344075
+"arr_statusDrowsy",-0.0480674620257607
+"arr_statusSemicoma",0.631822627637934
+"arr_statusStupor",0.294556338897486
+"Upper_Lower_Extremities_imputedBoth Bilateral",0.779946052986691
+"arr_pp_sizebilaterally mydriatic",0.60251483631611
+"arr_pp_promptbilateral absence",0.673670628248025
+"head_neck_AIS4",0.106258564152491
+"head_neck_AIS5",0.822004947611517
+"EDHpresent",-0.417092637514708
+"SAHpresent",0.353001831374677
+"IVHpresent",0.366858509226335
+"MidlineShiftpresent",0.525060910774446
+"basal_cistern_compressionpresent",0.693220341328628
+"facial_fracturepresent",-0.238529082816394
+"ns(Alk.Phosphatase, df = 4)1",-0.0465623865983871
+"ns(Alk.Phosphatase, df = 4)2",0.197592797687736
+"ns(Alk.Phosphatase, df = 4)3",0.259850934831922
+"ns(Alk.Phosphatase, df = 4)4",1.16878854131114
+"ns(Albumin, df = 4)1",-0.131428992387592
+"ns(Albumin, df = 4)2",-0.538541282101298
+"ns(Albumin, df = 4)3",0.531565300278287
+"ns(Albumin, df = 4)4",-0.527052126536062
+"ns(CRP, df = 4)1",-0.0711622803810678
+"ns(CRP, df = 4)2",0.165315180482662
+"ns(CRP, df = 4)3",0.495295213330016
+"ns(CRP, df = 4)4",0.973067059250122
+"ns(aPTT, df = 4)1",-0.143582801504398
+"ns(aPTT, df = 4)2",1.07763038318694
+"ns(aPTT, df = 4)3",-0.223336394925598
+"ns(aPTT, df = 4)4",1.14345422235916

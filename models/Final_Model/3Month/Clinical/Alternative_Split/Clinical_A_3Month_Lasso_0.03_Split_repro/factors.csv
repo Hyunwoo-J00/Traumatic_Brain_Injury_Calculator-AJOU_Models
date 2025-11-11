@@ -1,0 +1,12 @@
+"variable","level","is_reference","dummy_name"
+"GOSE_3_Unfav","0",TRUE,NA
+"GOSE_3_Unfav","1",FALSE,"GOSE_3_Unfav1"
+"InjuryHx.InjCause","2",TRUE,NA
+"InjuryHx.InjCause","1",FALSE,"InjuryHx.InjCause1"
+"InjuryHx.InjCause","3",FALSE,"InjuryHx.InjCause3"
+"InjuryHx.InjCause","88",FALSE,"InjuryHx.InjCause88"
+"arr_pp_prompt","preserved",TRUE,NA
+"arr_pp_prompt","bilateral absence",FALSE,"arr_pp_promptbilateral absence"
+"head_neck_AIS","3",TRUE,NA
+"head_neck_AIS","4",FALSE,"head_neck_AIS4"
+"head_neck_AIS","5",FALSE,"head_neck_AIS5"

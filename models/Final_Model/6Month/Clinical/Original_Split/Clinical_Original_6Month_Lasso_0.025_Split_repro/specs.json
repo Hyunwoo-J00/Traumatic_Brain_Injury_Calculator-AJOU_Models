@@ -1,0 +1,12 @@
+{
+  "family": "binomial",
+  "link": "logit",
+  "penalty": "lasso",
+  "alpha": 1,
+  "lambda": 0.025,
+  "standardize": true,
+  "threshold": 0.5,
+  "formula": "GOSE_6_Unfav ~ Age + InjuryHx.InjCause + arr_status + Upper_Lower_Extremities_imputed + arr_pp_size + arr_pp_prompt + head_neck_AIS",
+  "column_count": 13,
+  "coef_on_original_scale": true
+}

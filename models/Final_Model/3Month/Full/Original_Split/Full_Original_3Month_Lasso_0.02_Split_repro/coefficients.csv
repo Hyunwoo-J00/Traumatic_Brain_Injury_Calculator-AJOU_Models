@@ -1,0 +1,36 @@
+"feature","coef"
+"(Intercept)",-2.70217918617484
+"Age",0.0165018639760324
+"InjuryHx.InjCause1",0
+"InjuryHx.InjCause3",0
+"InjuryHx.InjCause88",0
+"arr_statusComa",0.346971946192108
+"arr_statusDrowsy",0
+"arr_statusSemicoma",0.570674305726052
+"arr_statusStupor",0.190734416506708
+"Upper_Lower_Extremities_imputedBoth Bilateral",0.917446020789742
+"arr_pp_promptbilateral absence",1.13114250213167
+"head_neck_AIS4",0.12398493726256
+"head_neck_AIS5",0.951651301884975
+"EDHpresent",-0.374273165482359
+"contusionpresent",0.312493032446508
+"SAHpresent",0.436158903573008
+"IVHpresent",0.240649940598035
+"MidlineShiftpresent",0.277322341806833
+"basal_cistern_compressionpresent",0.537816838950698
+"ns(Alk.Phosphatase, df = 4)1",0
+"ns(Alk.Phosphatase, df = 4)2",0
+"ns(Alk.Phosphatase, df = 4)3",0
+"ns(Alk.Phosphatase, df = 4)4",0.40202614878886
+"ns(CRP, df = 4)1",0
+"ns(CRP, df = 4)2",0
+"ns(CRP, df = 4)3",0
+"ns(CRP, df = 4)4",0.720957034734199
+"ns(Sodium, df = 4)1",-0.173297412436341
+"ns(Sodium, df = 4)2",0
+"ns(Sodium, df = 4)3",0
+"ns(Sodium, df = 4)4",0
+"ns(aPTT, df = 4)1",0
+"ns(aPTT, df = 4)2",1.21698394979704
+"ns(aPTT, df = 4)3",0
+"ns(aPTT, df = 4)4",0.460971896890775

@@ -1,0 +1,14 @@
+"feature","coef"
+"(Intercept)",-2.63603138521388
+"Age",0.0190875997622834
+"InjuryHx.InjCause1",0
+"InjuryHx.InjCause3",-0.00891737328837149
+"InjuryHx.InjCause88",0
+"arr_statusComa",0.411419141584096
+"arr_statusDrowsy",0
+"arr_statusSemicoma",0.503154457095202
+"arr_statusStupor",0.206886079267812
+"Upper_Lower_Extremities_imputedBoth Bilateral",1.41355583560606
+"arr_pp_promptbilateral absence",1.03798819142445
+"head_neck_AIS4",0.203888048800608
+"head_neck_AIS5",1.10806171294777

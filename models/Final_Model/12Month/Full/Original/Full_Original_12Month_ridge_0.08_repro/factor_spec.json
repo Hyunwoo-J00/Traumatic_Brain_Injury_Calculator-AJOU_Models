@@ -1,0 +1,50 @@
+{
+  "GOSE_12_Unfav": {
+    "levels": ["0", "1"],
+    "reference": "0"
+  },
+  "arr_status": {
+    "levels": ["Alert", "Coma", "Drowsy", "Semicoma", "Stupor"],
+    "reference": "Alert"
+  },
+  "Upper_Lower_Extremities_imputed": {
+    "levels": ["Preserved", "Both Bilateral"],
+    "reference": "Preserved"
+  },
+  "arr_pp_size": {
+    "levels": ["not mydriatic", "bilaterally mydriatic"],
+    "reference": "not mydriatic"
+  },
+  "arr_pp_prompt": {
+    "levels": ["preserved", "bilateral absence"],
+    "reference": "preserved"
+  },
+  "head_neck_AIS": {
+    "levels": ["3", "4", "5"],
+    "reference": "3"
+  },
+  "EDH": {
+    "levels": ["absent", "present"],
+    "reference": "absent"
+  },
+  "SAH": {
+    "levels": ["absent", "present"],
+    "reference": "absent"
+  },
+  "IVH": {
+    "levels": ["absent", "present"],
+    "reference": "absent"
+  },
+  "MidlineShift": {
+    "levels": ["absent", "present"],
+    "reference": "absent"
+  },
+  "basal_cistern_compression": {
+    "levels": ["absent", "present"],
+    "reference": "absent"
+  },
+  "facial_fracture": {
+    "levels": ["absent", "present"],
+    "reference": "absent"
+  }
+}

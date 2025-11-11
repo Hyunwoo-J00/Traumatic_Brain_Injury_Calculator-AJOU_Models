@@ -1,0 +1,8 @@
+"feature","coef"
+"(Intercept)",-0.929710441141155
+"Age",0.0265467461794278
+"arr_GCS_derived",-0.178651025169542
+"arr_pp_sizebilaterally mydriatic",0.323273384591581
+"arr_pp_promptbilateral absence",1.03459674775272
+"head_neck_AIS4",0.104991550506113
+"head_neck_AIS5",1.19612611515038

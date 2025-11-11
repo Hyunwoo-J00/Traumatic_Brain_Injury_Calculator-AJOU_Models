@@ -1,0 +1,9 @@
+Age
+InjuryHx.InjCause1
+InjuryHx.InjCause3
+InjuryHx.InjCause88
+arr_GCS_derived
+arr_pp_sizebilaterally mydriatic
+arr_pp_promptbilateral absence
+head_neck_AIS4
+head_neck_AIS5

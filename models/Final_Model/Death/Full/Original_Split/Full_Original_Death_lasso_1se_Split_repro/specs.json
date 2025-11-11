@@ -1,0 +1,12 @@
+{
+  "family": "binomial",
+  "link": "logit",
+  "penalty": "lasso",
+  "alpha": 1,
+  "lambda": 0.0095,
+  "standardize": true,
+  "threshold": 0.5,
+  "formula": "`14d_death` ~ Age + arr_status + InjuryHx.InjCause + arr_pp_size + arr_pp_prompt + head_neck_AIS + EDH + SAH + DAI + ns(aPTT, df = 4) + ns(CRP, df = 4) + ns(Platelet, df = 4) + ns(AST, df = 4) + ns(Sodium, df = 4)",
+  "column_count": 35,
+  "coef_on_original_scale": true
+}

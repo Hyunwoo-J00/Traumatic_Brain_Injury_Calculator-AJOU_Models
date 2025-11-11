@@ -1,0 +1,12 @@
+{
+  "family": "binomial",
+  "link": "logit",
+  "penalty": "lasso",
+  "alpha": 1,
+  "lambda": 0.02,
+  "standardize": true,
+  "threshold": 0.5,
+  "formula": "GOSE_3_Unfav ~ Age + InjuryHx.InjCause + arr_GCS_derived + arr_pp_prompt + head_neck_AIS + EDH + contusion + SAH + IVH + MidlineShift + basal_cistern_compression + ns(Alk.Phosphatase, df = 4) + ns(CRP, df = 4) + ns(Sodium, df = 4) + ns(aPTT, df = 4)",
+  "column_count": 30,
+  "coef_on_original_scale": true
+}

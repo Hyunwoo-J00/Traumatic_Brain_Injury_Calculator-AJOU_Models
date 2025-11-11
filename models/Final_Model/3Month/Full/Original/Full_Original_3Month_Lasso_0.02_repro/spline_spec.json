@@ -1,0 +1,26 @@
+{
+  "Alk.Phosphatase": {
+    "df": 4,
+    "knots": [54, 66, 81.75],
+    "Boundary.knots": [30, 180],
+    "intercept": false
+  },
+  "CRP": {
+    "df": 4,
+    "knots": [0.15, 1.4898, 7.8],
+    "Boundary.knots": [0.02, 30],
+    "intercept": false
+  },
+  "Sodium": {
+    "df": 4,
+    "knots": [138, 140, 142],
+    "Boundary.knots": [128, 148],
+    "intercept": false
+  },
+  "aPTT": {
+    "df": 4,
+    "knots": [28, 30, 34],
+    "Boundary.knots": [20, 100],
+    "intercept": false
+  }
+}

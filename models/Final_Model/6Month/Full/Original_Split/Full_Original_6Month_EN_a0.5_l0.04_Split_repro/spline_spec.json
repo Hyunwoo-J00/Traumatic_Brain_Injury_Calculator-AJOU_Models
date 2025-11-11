@@ -1,0 +1,38 @@
+{
+  "Alk.Phosphatase": {
+    "df": 4,
+    "knots": [54, 66, 82],
+    "Boundary.knots": [30, 180],
+    "intercept": false
+  },
+  "CRP": {
+    "df": 4,
+    "knots": [0.15, 1.575, 7.5075],
+    "Boundary.knots": [0.02, 30],
+    "intercept": false
+  },
+  "BUN": {
+    "df": 4,
+    "knots": [11.8, 14.5, 18.1],
+    "Boundary.knots": [2.7, 117.3],
+    "intercept": false
+  },
+  "Sodium": {
+    "df": 4,
+    "knots": [138, 140, 142],
+    "Boundary.knots": [128, 148],
+    "intercept": false
+  },
+  "aPTT": {
+    "df": 4,
+    "knots": [28, 30, 34],
+    "Boundary.knots": [20, 100],
+    "intercept": false
+  },
+  "Albumin": {
+    "df": 4,
+    "knots": [3.8, 4.2, 4.5],
+    "Boundary.knots": [2.2, 5.3],
+    "intercept": false
+  }
+}

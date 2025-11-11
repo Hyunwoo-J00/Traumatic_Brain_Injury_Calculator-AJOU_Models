@@ -1,0 +1,26 @@
+{
+  "Alk.Phosphatase": {
+    "df": 4,
+    "knots": [53, 65, 81],
+    "Boundary.knots": [30, 180],
+    "intercept": false
+  },
+  "Albumin": {
+    "df": 4,
+    "knots": [3.8, 4.2, 4.4],
+    "Boundary.knots": [2.2, 5.2],
+    "intercept": false
+  },
+  "CRP": {
+    "df": 4,
+    "knots": [0.14, 1.44, 8.415],
+    "Boundary.knots": [0.02, 30],
+    "intercept": false
+  },
+  "aPTT": {
+    "df": 4,
+    "knots": [27, 30, 34],
+    "Boundary.knots": [20, 100],
+    "intercept": false
+  }
+}

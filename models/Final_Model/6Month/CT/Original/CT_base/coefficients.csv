@@ -1,0 +1,21 @@
+"feature","coef"
+"(Intercept)",-3.24105473849853
+"Age",0.0211047159894034
+"InjuryHx.InjCause1",0
+"InjuryHx.InjCause3",0
+"InjuryHx.InjCause88",0
+"arr_statusComa",0.757190165219985
+"arr_statusDrowsy",0
+"arr_statusSemicoma",0.56394670313447
+"arr_statusStupor",0.312165653638598
+"Upper_Lower_Extremities_imputedBoth Bilateral",0.885486056955094
+"arr_pp_sizebilaterally mydriatic",0.455930308468256
+"arr_pp_promptbilateral absence",0.933196522599804
+"head_neck_AIS4",0.130994669755944
+"head_neck_AIS5",0.908358423489214
+"EDHpresent",-0.351052941040608
+"contusionpresent",0.307972723620342
+"SAHpresent",0.221076217512382
+"IVHpresent",0.422487319700011
+"MidlineShiftpresent",0.310452135634459
+"basal_cistern_compressionpresent",0.456974571931935

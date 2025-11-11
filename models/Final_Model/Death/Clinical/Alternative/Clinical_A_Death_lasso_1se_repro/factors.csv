@@ -1,0 +1,14 @@
+variable,level,is_reference,dummy_name,New name,New level
+14d_death,0,TRUE,NA,14 Day Death,Survived
+14d_death,1,FALSE,14d_death1,14 Day Death,Death
+InjuryHx.InjCause,2,TRUE,NA,Injury Cause,Incidental fall
+InjuryHx.InjCause,1,FALSE,InjuryHx.InjCause1,Injury Cause,Road traffic accident
+InjuryHx.InjCause,3,FALSE,InjuryHx.InjCause3,Injury Cause,Violence or non-intentional injury
+InjuryHx.InjCause,88,FALSE,InjuryHx.InjCause88,Injury Cause,Unknown
+arr_pp_size,not mydriatic,TRUE,NA,Bilateral Mydriasis,No
+arr_pp_size,bilaterally mydriatic,FALSE,arr_pp_sizebilaterally mydriatic,Bilateral Mydriasis,Yes
+arr_pp_prompt,preserved,TRUE,NA,Bilateral Non-Reactive Pupils,No
+arr_pp_prompt,bilateral absence,FALSE,arr_pp_promptbilateral absence,Bilateral Non-Reactive Pupils,Yes
+head_neck_AIS,3,TRUE,NA,Head/Neck AIS,3
+head_neck_AIS,4,FALSE,head_neck_AIS4,Head/Neck AIS,4
+head_neck_AIS,5,FALSE,head_neck_AIS5,Head/Neck AIS,5

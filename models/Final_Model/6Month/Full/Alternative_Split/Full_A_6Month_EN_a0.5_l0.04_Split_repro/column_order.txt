@@ -1,0 +1,39 @@
+Age
+InjuryHx.InjCause1
+InjuryHx.InjCause3
+InjuryHx.InjCause88
+arr_GCS_derived
+arr_pp_sizebilaterally mydriatic
+arr_pp_promptbilateral absence
+head_neck_AIS4
+head_neck_AIS5
+EDHpresent
+contusionpresent
+SAHpresent
+IVHpresent
+MidlineShiftpresent
+basal_cistern_compressionpresent
+ns(Alk.Phosphatase, df = 4)1
+ns(Alk.Phosphatase, df = 4)2
+ns(Alk.Phosphatase, df = 4)3
+ns(Alk.Phosphatase, df = 4)4
+ns(CRP, df = 4)1
+ns(CRP, df = 4)2
+ns(CRP, df = 4)3
+ns(CRP, df = 4)4
+ns(Albumin, df = 4)1
+ns(Albumin, df = 4)2
+ns(Albumin, df = 4)3
+ns(Albumin, df = 4)4
+ns(BUN, df = 4)1
+ns(BUN, df = 4)2
+ns(BUN, df = 4)3
+ns(BUN, df = 4)4
+ns(Sodium, df = 4)1
+ns(Sodium, df = 4)2
+ns(Sodium, df = 4)3
+ns(Sodium, df = 4)4
+ns(aPTT, df = 4)1
+ns(aPTT, df = 4)2
+ns(aPTT, df = 4)3
+ns(aPTT, df = 4)4

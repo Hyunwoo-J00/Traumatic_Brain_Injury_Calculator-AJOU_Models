@@ -1,0 +1,10 @@
+"variable","level","is_reference","dummy_name"
+"GOSE_12_Unfav","0",TRUE,NA
+"GOSE_12_Unfav","1",FALSE,"GOSE_12_Unfav1"
+"arr_pp_size","not mydriatic",TRUE,NA
+"arr_pp_size","bilaterally mydriatic",FALSE,"arr_pp_sizebilaterally mydriatic"
+"arr_pp_prompt","preserved",TRUE,NA
+"arr_pp_prompt","bilateral absence",FALSE,"arr_pp_promptbilateral absence"
+"head_neck_AIS","3",TRUE,NA
+"head_neck_AIS","4",FALSE,"head_neck_AIS4"
+"head_neck_AIS","5",FALSE,"head_neck_AIS5"

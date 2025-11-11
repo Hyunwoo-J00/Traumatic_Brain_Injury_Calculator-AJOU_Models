@@ -1,0 +1,10 @@
+"feature","coef"
+"(Intercept)",-0.292544184371393
+"Age",0.0222222166565885
+"InjuryHx.InjCause1",0
+"InjuryHx.InjCause3",0
+"InjuryHx.InjCause88",0
+"arr_GCS_derived",-0.18784836778289
+"arr_pp_promptbilateral absence",1.05430318036941
+"head_neck_AIS4",0.0887636947606677
+"head_neck_AIS5",0.994365558435479

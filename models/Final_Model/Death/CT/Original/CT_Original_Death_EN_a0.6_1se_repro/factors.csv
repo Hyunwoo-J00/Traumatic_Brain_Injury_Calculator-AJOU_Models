@@ -1,0 +1,25 @@
+"variable","level","is_reference","dummy_name"
+"14d_death","0",TRUE,NA
+"14d_death","1",FALSE,"14d_death1"
+"arr_status","Alert",TRUE,NA
+"arr_status","Coma",FALSE,"arr_statusComa"
+"arr_status","Drowsy",FALSE,"arr_statusDrowsy"
+"arr_status","Semicoma",FALSE,"arr_statusSemicoma"
+"arr_status","Stupor",FALSE,"arr_statusStupor"
+"InjuryHx.InjCause","2",TRUE,NA
+"InjuryHx.InjCause","1",FALSE,"InjuryHx.InjCause1"
+"InjuryHx.InjCause","3",FALSE,"InjuryHx.InjCause3"
+"InjuryHx.InjCause","88",FALSE,"InjuryHx.InjCause88"
+"arr_pp_size","not mydriatic",TRUE,NA
+"arr_pp_size","bilaterally mydriatic",FALSE,"arr_pp_sizebilaterally mydriatic"
+"arr_pp_prompt","preserved",TRUE,NA
+"arr_pp_prompt","bilateral absence",FALSE,"arr_pp_promptbilateral absence"
+"head_neck_AIS","3",TRUE,NA
+"head_neck_AIS","4",FALSE,"head_neck_AIS4"
+"head_neck_AIS","5",FALSE,"head_neck_AIS5"
+"EDH","absent",TRUE,NA
+"EDH","present",FALSE,"EDHpresent"
+"SAH","absent",TRUE,NA
+"SAH","present",FALSE,"SAHpresent"
+"DAI","absent",TRUE,NA
+"DAI","present",FALSE,"DAIpresent"
