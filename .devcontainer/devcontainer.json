@@ -1,0 +1,38 @@
+{
+  "name": "AJOU TBI Codespace",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y python3 && docker build -t tbi-api .",
+  "forwardPorts": [8000, 5500],
+  "portsAttributes": {
+    "8000": { "label": "Plumber API", "onAutoForward": "openBrowser", "protocol": "https", "elevateIfNeeded": true, "requireLocalPort": false },
+    "5500": { "label": "Docs (static web)", "onAutoForward": "openBrowser", "protocol": "https", "elevateIfNeeded": true, "requireLocalPort": false }
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      },
+      "tasks": {
+        "version": "2.0.0",
+        "tasks": [
+          {
+            "label": "Run API",
+            "type": "shell",
+            "command": "bash scripts/run_api.sh",
+            "problemMatcher": []
+          },
+          {
+            "label": "Run Web",
+            "type": "shell",
+            "command": "bash scripts/run_web.sh",
+            "problemMatcher": []
+          }
+        ]
+      }
+    }
+  },
+  "postAttachCommand": "bash scripts/run_api.sh"
+}
