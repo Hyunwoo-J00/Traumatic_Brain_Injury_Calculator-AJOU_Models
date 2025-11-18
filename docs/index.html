@@ -5,7 +5,7 @@
   <title>AJOU TBI Prognostic Calculator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
-  <!-- 1) config.json에서 API 주소 로드 -->
+  <!-- 1) Load API base URL from config.json -->
   <script>
     window.API = "";
     window.configReady = (async () => {
@@ -36,7 +36,7 @@
     .warn{color:#c70;font-weight:700}
     .pill{display:inline-flex;gap:8px;border:1px solid #ddd;border-radius:999px;padding:6px}
     .pill label{width:auto;font-weight:500}
-    .subtle{font-size:12px;color:#666}
+    .subtle{font-size:12px;color:#666;margin-top:2px}
     .invalid{outline:2px solid #d33}
     .flex-between{display:flex;gap:12px;align-items:center;justify-content:space-between}
     .stack{display:flex;flex-direction:column;gap:4px;flex:1}
@@ -60,12 +60,16 @@
     </div>
 
     <div class="row">
-      <label id="lblAvail">Is 'Level of Consciousness' available?</label>
+      <label id="lblAvail">Is "Level of Consciousness" available?</label>
       <div class="pill">
         <label><input type="radio" name="locAvail" value="yes" checked> Yes</label>
         <label><input type="radio" name="locAvail" value="no"> No</label>
       </div>
     </div>
+    <div class="subtle" id="hint_loc">
+      If Yes → Base model will be used. If No → Adapted model will be used.
+    </div>
+
     <div class="row">
       <label>Is CT data available?</label>
       <div class="pill">
@@ -73,6 +77,10 @@
         <label><input type="radio" name="ctAvail" value="yes"> Yes</label>
       </div>
     </div>
+    <div class="subtle" id="hint_ct">
+      If Yes → CT or Full model will be used (depending on lab availability). If No → Clinical model (Base or Adapted) will be used.
+    </div>
+
     <div class="row">
       <label>Is Lab data available?</label>
       <div class="pill">
@@ -80,8 +88,8 @@
         <label><input type="radio" name="labAvail" value="yes"> Yes</label>
       </div>
     </div>
-    <div class="subtle">
-      Yes (LOC) → Base, No (LOC) → Alternative. CT Yes → CT 모델, CT Yes & Lab Yes → Full 모델.
+    <div class="subtle" id="hint_lab">
+      If Yes (and CT is Yes) → Full model will be used. If No → Clinical or CT model will be used without lab variables.
     </div>
   </div>
 
@@ -105,7 +113,7 @@
       </select>
     </div>
 
-    <!-- Alternative only -->
+    <!-- Adapted (Alternative) only -->
     <div class="row alt-only" id="row_gcs" style="display:none;">
       <label>GCS Score</label>
       <input id="gcs" type="number" min="3" max="15" step="1" placeholder="3–15">
@@ -122,7 +130,7 @@
       </select>
     </div>
 
-    <!-- 모델에 없으면 자동 숨김 -->
+    <!-- Hidden automatically if not in model -->
     <div class="row" id="row_mydriasis">
       <label>Bilateral Mydriasis</label>
       <select id="mydriasis">
@@ -190,11 +198,17 @@
     <div class="muted" id="modelId"></div>
   </div>
 
-  <!-- 2) 메인 스크립트 -->
+  <!-- 2) Main script -->
   <script>
     let API = "";
 
-    /* ====== 라벨/단위 ====== */
+    /* ====== Helper: replace "Alternative" with "Adapted" for display only ====== */
+    function toAdaptedLabel(s){
+      if (!s) return s;
+      return String(s).replace(/Alternative/g, "Adapted");
+    }
+
+    /* ====== Labels / units ====== */
     const DISPLAY_NAME = {
       contusion: "Contusion",
       MidlineShift: "Midline shift",
@@ -214,7 +228,7 @@
       BUN: "mg/dL"
     };
 
-    /* ====== Lab Boundary (고정) ====== */
+    /* ====== Lab boundaries (static) ====== */
     const STATIC_BOUNDS = {
       AST:  {min:15, max:300},
       "Alk.Phosphatase": {min:30, max:180},
@@ -226,7 +240,7 @@
       aPTT: {min:20, max:100}
     };
 
-    /* ====== Outcome별 Lab 구성 ====== */
+    /* ====== Labs per outcome ====== */
     const LABS_BY_OUTCOME = {
       death14: ["aPTT","CRP","Sodium","Platelet","AST"],
       "3m":    ["Alk.Phosphatase","CRP","Sodium","aPTT"],
@@ -234,7 +248,7 @@
       "12m":   ["Alk.Phosphatase","Albumin","CRP","aPTT"]
     };
 
-    /* ====== Clinical 매핑 ====== */
+    /* ====== Clinical mapping ====== */
     const MAP_CLINICAL_BASE = {
       age: "Age",
       loc: "arr_status",
@@ -254,7 +268,7 @@
       qpl: "Upper_Lower_Extremities_imputed"
     };
 
-    /* ====== 상태 저장 (입력 유지) ====== */
+    /* ====== Form state (preserve inputs) ====== */
     const formState = {};
     function snapshotForm(){
       document.querySelectorAll('input, select').forEach(el=>{
@@ -281,7 +295,7 @@
       });
     }
 
-    /* ====== 유틸 ====== */
+    /* ====== Utility ====== */
     function normalizeOutcome(){ return document.getElementById('outcome').value; }
     function currentKey(){
       const locYes = document.querySelector('input[name="locAvail"]:checked')?.value === "yes";
@@ -296,7 +310,7 @@
     }
     function isBaseKey(key){ return /_base$/.test(key) || key === "clinical_base"; }
 
-    /* ====== CT/Lab 변수명 별칭 해결 ====== */
+    /* ====== CT/Lab variable name alias resolution ====== */
     const CT_ALIASES = {
       EDH: ["EDH","Imaging.EDH"],
       SAH: ["SAH","Imaging.SAH"],
@@ -325,7 +339,7 @@
       return null;
     }
 
-    /* 가시성 토글 */
+    /* Visibility toggle */
     function applyVisibility(){
       const key = currentKey();
       const isBase = (key === "clinical_base" || key === "ct_base" || key === "full_base");
@@ -338,14 +352,14 @@
       document.querySelector(".lab-block").style.display = (ctYes && labYes) ? "" : "none";
     }
 
-    /* (신규) 메타 적용 전 기본 라벨 - ReferenceError 방지용 */
+    /* Default label before meta is applied */
     function updateAvailLabel(){
       const lbl = document.getElementById('lblAvail');
       if (!lbl) return;
-      lbl.textContent = "Is 'Level of Consciousness' available?";
+      lbl.textContent = 'Is "Level of Consciousness" available?';
     }
 
-    /* 3m/6m/12m 라벨 변경(메타 기준) */
+    /* Adjust label based on meta: if quadriplegia is present, mention it */
     function updateAvailLabelByMeta(meta){
       const lbl = document.getElementById('lblAvail');
       if (!lbl) return;
@@ -354,8 +368,8 @@
       const hasQPL = vars.has("Upper_Lower_Extremities_imputed") ||
                      Object.prototype.hasOwnProperty.call(fs, "Upper_Lower_Extremities_imputed");
       lbl.textContent = hasQPL
-        ? "Is 'Level of Consciousness' and 'Manual Motor Test (Quadriplegia)' available?"
-        : "Is 'Level of Consciousness' available?";
+        ? 'Are "Level of Consciousness" and "Manual Motor Test (Quadriplegia)" available?'
+        : 'Is "Level of Consciousness" available?';
     }
 
     async function fetchJSON(url){
@@ -382,7 +396,7 @@
       return DISPLAY_NAME[varName] || varName;
     }
 
-    /* ====== CT/Lab 렌더 ====== */
+    /* ====== Render CT / Lab variables ====== */
     function renderCtVars(meta){
       const cont = document.getElementById('ctVars'); cont.innerHTML = "";
       const fs = meta.factor_spec || {};
@@ -433,12 +447,12 @@
       const fs   = meta.factor_spec || {};
       const has = (name) => vars.has(name) || Object.prototype.hasOwnProperty.call(fs, name);
 
-      // 기본 임상 항목 가시성
+      // Base clinical visibility
       document.getElementById('row_mydriasis').style.display = has("arr_pp_size")   ? "" : "none";
       document.getElementById('row_nonreactive').style.display = has("arr_pp_prompt") ? "" : "none";
       document.getElementById('row_ais').style.display        = has("head_neck_AIS")  ? "" : "none";
 
-      // ★ Quadriplegia는 모델에 있을 때만 렌더 (Alt에 없으면 표시 안 됨)
+      // Quadriplegia: only render if present in model
       if (has("Upper_Lower_Extremities_imputed")){
         const row = document.createElement("div"); row.className="row";
         const lab = document.createElement("label"); lab.textContent = "Quadriplegia";
@@ -451,7 +465,7 @@
       }
     }
 
-    /* ====== 서버 메타 로드 ====== */
+    /* ====== Load META from server ====== */
     async function loadMeta(){
       if (!API) throw new Error("API base URL not set.");
       const key = currentKey();
@@ -467,7 +481,8 @@
           renderLabVars();
           return;
         }
-        document.getElementById('metaLine').textContent = `Model: ${meta.model_id} · Target: ${meta.target}`;
+        const modelIdDisplay = toAdaptedLabel(meta.model_id);
+        document.getElementById('metaLine').textContent = `Model: ${modelIdDisplay} · Target: ${meta.target}`;
         window.__factorSpec = meta.factor_spec || {};
         window.__formulaVars = (meta.formula_vars || []).map(v=>String(v));
         console.log("[meta] factor_spec keys:", Object.keys(window.__factorSpec));
@@ -499,7 +514,7 @@
       }catch(e){ console.warn("coef check failed:", e); }
     }
 
-    /* ====== 인코더 ====== */
+    /* ====== Encoders ====== */
     function encodePresentAbsent(displayValue, vname, factorSpec){
       const wantPresent = String(displayValue).toLowerCase() === "present";
       const levels = ((factorSpec?.[vname]?.levels) || []).map(x => String(x));
@@ -517,7 +532,7 @@
     function encodeYesNoForMydriasis(v){ return v === "Yes" ? "bilaterally mydriatic" : "not mydriatic"; }
     function encodeYesNoForNonReactive(v){ return v === "Yes" ? "bilateral absence" : "preserved"; }
 
-    /* ====== 입력 읽기 & 제출 검증 ====== */
+    /* ====== Input reading & validation ====== */
     const INJURY_CODE_BY_LABEL = {"Road traffic accident":"1","Incidental fall":"2","Violence or non-intentional injury":"3","Unknown":"88"};
 
     function buildRow(){
@@ -563,7 +578,7 @@
         if (hasAIS) { if(!ais) throw new Error("Select Head/Neck AIS."); row[MAP_CLINICAL_ALT.ais] = String(ais); }
       }
 
-      // ★ Quadriplegia: "모델에 있을 때만" 포함 (Alt에 없으면 전송 안 함)
+      // Quadriplegia: include only if present in model
       const vars = new Set(window.__formulaVars || []);
       const fs   = window.__factorSpec || {};
       const hasQPLinModel = vars.has("Upper_Lower_Extremities_imputed") ||
@@ -587,7 +602,7 @@
         });
       }
 
-      // Lab (Outcome별 목록만 전송)
+      // Lab (only outcome-specific list)
       const labYes = document.querySelector('input[name="labAvail"]:checked')?.value === "yes";
       if (ctYes && labYes) {
         const labs = LABS_BY_OUTCOME[outcome] || [];
@@ -601,7 +616,6 @@
           if (b && (val < b.min || val > b.max)) {
             throw new Error(`${(DISPLAY_NAME[name] || name)} must be within ${b.min}–${b.max}.`);
           }
-          // 실제 서버 전송명(별칭 고려)
           const serverName = resolveServerVar(window.__factorSpec, new Set(window.__formulaVars||[]), name) || name;
           row[serverName] = val;
         });
@@ -610,7 +624,7 @@
       return row;
     }
 
-    /* ====== 여러 모델 동시 예측 & 에러 가시화 ====== */
+    /* ====== Multiple model prediction & error handling ====== */
     function keysToRunForCompare(key){
       const base = isBaseKey(key) ? "base" : "alt";
       if (key.startsWith("clinical")) return [ `clinical_${base}` ];
@@ -645,12 +659,12 @@
       return out;
     }
 
-    /* ====== 초기화/리프레시 ====== */
+    /* ====== Refresh UI ====== */
     async function refreshAll(){
       snapshotForm();
-      updateAvailLabel();      // 기본 문구(메타 전)
+      updateAvailLabel();
       applyVisibility();
-      await loadMeta();        // 메타 반영 후 updateAvailLabelByMeta(meta)에서 최종 문구 덮어씀
+      await loadMeta();
       applyVisibility();
     }
 
@@ -688,7 +702,7 @@
         return;
       }
 
-      updateAvailLabel();  // 초기 기본 문구
+      updateAvailLabel();
       await refreshAll();
 
       document.getElementById('predictBtn').addEventListener('click', async ()=>{
@@ -707,8 +721,9 @@
             const out = await runPredict(k, outcome, row, thr);
             const p = out.prob_14d_death?.[0];
             const y = out.pred_0_1?.[0];
+            const modelLabel = toAdaptedLabel(out.model_id || k);
             results.push({
-              key:k, model_id: out.model_id || k,
+              key:k, model_id: modelLabel,
               p: (p==null||isNaN(p)) ? null : p,
               y: (y==null) ? null : y,
               order: order[k] || 99
