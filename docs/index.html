@@ -36,19 +36,39 @@
     .warn{color:#c70;font-weight:700}
     .pill{display:inline-flex;gap:8px;border:1px solid #ddd;border-radius:999px;padding:6px}
     .pill label{width:auto;font-weight:500}
-    .subtle{font-size:12px;color:#666;margin-top:2px}
+    .subtle{font-size:12px;color:#666}
     .invalid{outline:2px solid #d33}
     .flex-between{display:flex;gap:12px;align-items:center;justify-content:space-between}
     .stack{display:flex;flex-direction:column;gap:4px;flex:1}
     @media (max-width:720px){ label{width:40%} }
+
+    /* Target section layout tweaks */
+    .target-row{
+      margin:6px 0;
+    }
+    .target-inline{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex:1;
+      flex-wrap:wrap;
+    }
+    .hint-inline{
+      font-size:12px;
+      color:#666;
+      white-space:nowrap;
+    }
   </style>
 </head>
 <body>
   <h1>AJOU TBI Prognostic Calculator</h1>
   <div id="metaLine" class="muted">Loading model...</div>
 
+  <!-- Target card -->
   <div class="card">
     <h3>Target</h3>
+
+    <!-- Outcome selection -->
     <div class="row">
       <label>Outcome</label>
       <select id="outcome">
@@ -59,40 +79,44 @@
       </select>
     </div>
 
-    <div class="row">
+    <!-- LOC -->
+    <div class="row target-row">
       <label id="lblAvail">Is "Level of Consciousness" available?</label>
-      <div class="pill">
-        <label><input type="radio" name="locAvail" value="yes" checked> Yes</label>
-        <label><input type="radio" name="locAvail" value="no"> No</label>
+      <div class="target-inline">
+        <div class="pill">
+          <label><input type="radio" name="locAvail" value="yes" checked> Yes</label>
+          <label><input type="radio" name="locAvail" value="no"> No</label>
+        </div>
+        <span class="hint-inline">Yes → Base model · No → Adapted model</span>
       </div>
     </div>
-    <div class="subtle" id="hint_loc">
-      If Yes → Base model will be used. If No → Adapted model will be used.
-    </div>
 
-    <div class="row">
+    <!-- CT -->
+    <div class="row target-row">
       <label>Is CT data available?</label>
-      <div class="pill">
-        <label><input type="radio" name="ctAvail" value="no" checked> No</label>
-        <label><input type="radio" name="ctAvail" value="yes"> Yes</label>
+      <div class="target-inline">
+        <div class="pill">
+          <label><input type="radio" name="ctAvail" value="no" checked> No</label>
+          <label><input type="radio" name="ctAvail" value="yes"> Yes</label>
+        </div>
+        <span class="hint-inline">Yes → CT or Full model · No → Clinical model</span>
       </div>
-    </div>
-    <div class="subtle" id="hint_ct">
-      If Yes → CT or Full model will be used (depending on lab availability). If No → Clinical model (Base or Adapted) will be used.
     </div>
 
-    <div class="row">
+    <!-- Lab -->
+    <div class="row target-row">
       <label>Is Lab data available?</label>
-      <div class="pill">
-        <label><input type="radio" name="labAvail" value="no" checked> No</label>
-        <label><input type="radio" name="labAvail" value="yes"> Yes</label>
+      <div class="target-inline">
+        <div class="pill">
+          <label><input type="radio" name="labAvail" value="no" checked> No</label>
+          <label><input type="radio" name="labAvail" value="yes"> Yes</label>
+        </div>
+        <span class="hint-inline">Yes → Full model · No → Clinical / CT model (no labs)</span>
       </div>
-    </div>
-    <div class="subtle" id="hint_lab">
-      If Yes (and CT is Yes) → Full model will be used. If No → Clinical or CT model will be used without lab variables.
     </div>
   </div>
 
+  <!-- Clinical block -->
   <div class="card">
     <h3>Clinical variables</h3>
     <div class="row">
@@ -130,7 +154,7 @@
       </select>
     </div>
 
-    <!-- Hidden automatically if not in model -->
+    <!-- These will be auto-hidden if the model does not use them -->
     <div class="row" id="row_mydriasis">
       <label>Bilateral Mydriasis</label>
       <select id="mydriasis">
@@ -159,20 +183,23 @@
       </select>
     </div>
 
-    <!-- Clinical extras (Quadriplegia) -->
+    <!-- Clinical extras (Quadriplegia, etc.) -->
     <div id="clinExtra"></div>
   </div>
 
+  <!-- CT block -->
   <div class="card ct-block" style="display:none;">
     <h3>CT variables</h3>
     <div id="ctVars"></div>
   </div>
 
+  <!-- Lab block -->
   <div class="card lab-block" style="display:none;">
     <h3>Lab variables</h3>
     <div id="labVars"></div>
   </div>
 
+  <!-- Threshold + actions -->
   <div class="card">
     <h3>Threshold</h3>
     <div class="row">
@@ -189,6 +216,7 @@
     </div>
   </div>
 
+  <!-- Results -->
   <div id="results" class="card" style="display:none;">
     <h3>Results</h3>
     <table>
@@ -198,17 +226,11 @@
     <div class="muted" id="modelId"></div>
   </div>
 
-  <!-- 2) Main script -->
+  <!-- Main script -->
   <script>
     let API = "";
 
-    /* ====== Helper: replace "Alternative" with "Adapted" for display only ====== */
-    function toAdaptedLabel(s){
-      if (!s) return s;
-      return String(s).replace(/Alternative/g, "Adapted");
-    }
-
-    /* ====== Labels / units ====== */
+    /* ====== Display labels and units ====== */
     const DISPLAY_NAME = {
       contusion: "Contusion",
       MidlineShift: "Midline shift",
@@ -228,7 +250,7 @@
       BUN: "mg/dL"
     };
 
-    /* ====== Lab boundaries (static) ====== */
+    /* ====== Lab bounds (fixed) ====== */
     const STATIC_BOUNDS = {
       AST:  {min:15, max:300},
       "Alk.Phosphatase": {min:30, max:180},
@@ -240,7 +262,7 @@
       aPTT: {min:20, max:100}
     };
 
-    /* ====== Labs per outcome ====== */
+    /* ====== Labs by outcome ====== */
     const LABS_BY_OUTCOME = {
       death14: ["aPTT","CRP","Sodium","Platelet","AST"],
       "3m":    ["Alk.Phosphatase","CRP","Sodium","aPTT"],
@@ -248,7 +270,7 @@
       "12m":   ["Alk.Phosphatase","Albumin","CRP","aPTT"]
     };
 
-    /* ====== Clinical mapping ====== */
+    /* ====== Clinical mapping (Base vs Adapted) ====== */
     const MAP_CLINICAL_BASE = {
       age: "Age",
       loc: "arr_status",
@@ -268,7 +290,7 @@
       qpl: "Upper_Lower_Extremities_imputed"
     };
 
-    /* ====== Form state (preserve inputs) ====== */
+    /* ====== Form state (keep values when switching outcome/model) ====== */
     const formState = {};
     function snapshotForm(){
       document.querySelectorAll('input, select').forEach(el=>{
@@ -295,7 +317,7 @@
       });
     }
 
-    /* ====== Utility ====== */
+    /* ====== Utilities ====== */
     function normalizeOutcome(){ return document.getElementById('outcome').value; }
     function currentKey(){
       const locYes = document.querySelector('input[name="locAvail"]:checked')?.value === "yes";
@@ -310,7 +332,7 @@
     }
     function isBaseKey(key){ return /_base$/.test(key) || key === "clinical_base"; }
 
-    /* ====== CT/Lab variable name alias resolution ====== */
+    /* ====== CT / Lab variable alias handling ====== */
     const CT_ALIASES = {
       EDH: ["EDH","Imaging.EDH"],
       SAH: ["SAH","Imaging.SAH"],
@@ -339,7 +361,7 @@
       return null;
     }
 
-    /* Visibility toggle */
+    /* Visibility toggles */
     function applyVisibility(){
       const key = currentKey();
       const isBase = (key === "clinical_base" || key === "ct_base" || key === "full_base");
@@ -352,14 +374,14 @@
       document.querySelector(".lab-block").style.display = (ctYes && labYes) ? "" : "none";
     }
 
-    /* Default label before meta is applied */
+    /* Initial label text before meta */
     function updateAvailLabel(){
       const lbl = document.getElementById('lblAvail');
       if (!lbl) return;
       lbl.textContent = 'Is "Level of Consciousness" available?';
     }
 
-    /* Adjust label based on meta: if quadriplegia is present, mention it */
+    /* Label based on meta (whether Quadriplegia is present) */
     function updateAvailLabelByMeta(meta){
       const lbl = document.getElementById('lblAvail');
       if (!lbl) return;
@@ -368,7 +390,7 @@
       const hasQPL = vars.has("Upper_Lower_Extremities_imputed") ||
                      Object.prototype.hasOwnProperty.call(fs, "Upper_Lower_Extremities_imputed");
       lbl.textContent = hasQPL
-        ? 'Are "Level of Consciousness" and "Manual Motor Test (Quadriplegia)" available?'
+        ? 'Is "Level of Consciousness" and "Manual Motor Test (Quadriplegia)" available?'
         : 'Is "Level of Consciousness" available?';
     }
 
@@ -396,7 +418,7 @@
       return DISPLAY_NAME[varName] || varName;
     }
 
-    /* ====== Render CT / Lab variables ====== */
+    /* ====== Render CT and Lab variables ====== */
     function renderCtVars(meta){
       const cont = document.getElementById('ctVars'); cont.innerHTML = "";
       const fs = meta.factor_spec || {};
@@ -413,7 +435,7 @@
         row.appendChild(lab); row.appendChild(sel); cont.appendChild(row);
         rendered++;
       });
-      console.log(`[ct] rendered ${rendered} vars`);
+      console.log("[ct] rendered", rendered, "vars");
     }
 
     function renderLabVars(){
@@ -436,7 +458,7 @@
 
         row.appendChild(label); row.appendChild(inp); cont.appendChild(row);
       });
-      console.log(`[lab] outcome=${oc}, rendered=${labs.length}`);
+      console.log("[lab] outcome=", oc, "rendered=", labs.length);
     }
 
     function renderClinicalExtras(meta){
@@ -447,12 +469,12 @@
       const fs   = meta.factor_spec || {};
       const has = (name) => vars.has(name) || Object.prototype.hasOwnProperty.call(fs, name);
 
-      // Base clinical visibility
-      document.getElementById('row_mydriasis').style.display = has("arr_pp_size")   ? "" : "none";
+      // Basic clinical visibility
+      document.getElementById('row_mydriasis').style.display  = has("arr_pp_size")   ? "" : "none";
       document.getElementById('row_nonreactive').style.display = has("arr_pp_prompt") ? "" : "none";
       document.getElementById('row_ais').style.display        = has("head_neck_AIS")  ? "" : "none";
 
-      // Quadriplegia: only render if present in model
+      // Quadriplegia only when the model actually uses it
       if (has("Upper_Lower_Extremities_imputed")){
         const row = document.createElement("div"); row.className="row";
         const lab = document.createElement("label"); lab.textContent = "Quadriplegia";
@@ -465,7 +487,7 @@
       }
     }
 
-    /* ====== Load META from server ====== */
+    /* ====== Load meta from API ====== */
     async function loadMeta(){
       if (!API) throw new Error("API base URL not set.");
       const key = currentKey();
@@ -481,8 +503,7 @@
           renderLabVars();
           return;
         }
-        const modelIdDisplay = toAdaptedLabel(meta.model_id);
-        document.getElementById('metaLine').textContent = `Model: ${modelIdDisplay} · Target: ${meta.target}`;
+        document.getElementById('metaLine').textContent = `Model: ${meta.model_id} · Target: ${meta.target}`;
         window.__factorSpec = meta.factor_spec || {};
         window.__formulaVars = (meta.formula_vars || []).map(v=>String(v));
         console.log("[meta] factor_spec keys:", Object.keys(window.__factorSpec));
@@ -511,7 +532,7 @@
         const rel = pairs.filter(o => typeof o.feature === "string" && o.feature.indexOf(injKey) === 0);
         const allZero = rel.length>0 && rel.every(o => Math.abs(Number(o.coef)||0) < 1e-12);
         document.getElementById('injRow').style.display = allZero ? 'none' : '';
-      }catch(e){ console.warn("coef check failed:", e); }
+      }catch(e){ console.warn("[coef] check failed:", e); }
     }
 
     /* ====== Encoders ====== */
@@ -532,7 +553,7 @@
     function encodeYesNoForMydriasis(v){ return v === "Yes" ? "bilaterally mydriatic" : "not mydriatic"; }
     function encodeYesNoForNonReactive(v){ return v === "Yes" ? "bilateral absence" : "preserved"; }
 
-    /* ====== Input reading & validation ====== */
+    /* ====== Build row & validation ====== */
     const INJURY_CODE_BY_LABEL = {"Road traffic accident":"1","Incidental fall":"2","Violence or non-intentional injury":"3","Unknown":"88"};
 
     function buildRow(){
@@ -544,9 +565,11 @@
       if(!isFinite(age) || age<18 || age>90) throw new Error("Age must be between 18 and 90.");
 
       if (isBase) {
-        const v = document.getElementById('loc').value; if(!v) throw new Error("Select Level of Consciousness.");
+        const v = document.getElementById('loc').value;
+        if(!v) throw new Error("Select Level of Consciousness.");
       } else {
-        const v = Number(document.getElementById('gcs').value); if(!isFinite(v) || v<3 || v>15) throw new Error("Enter GCS Score between 3 and 15.");
+        const v = Number(document.getElementById('gcs').value);
+        if(!isFinite(v) || v<3 || v>15) throw new Error("Enter GCS Score between 3 and 15.");
       }
 
       const injVisible = document.getElementById('injRow').style.display !== 'none';
@@ -566,19 +589,37 @@
         row[MAP_CLINICAL_BASE.age] = age;
         row[MAP_CLINICAL_BASE.loc] = document.getElementById('loc').value;
         if (injVisible && injurySel) row[MAP_CLINICAL_BASE.injury] = INJURY_CODE_BY_LABEL[injurySel] || String(injurySel);
-        if (hasMyd) { if(!myd) throw new Error("Select Bilateral Mydriasis."); row[MAP_CLINICAL_BASE.mydriasis] = encodeYesNoForMydriasis(myd); }
-        if (hasNrp) { if(!nre) throw new Error("Select Bilateral Non-Reactive Pupil."); row[MAP_CLINICAL_BASE.nonreactive] = encodeYesNoForNonReactive(nre); }
-        if (hasAIS) { if(!ais) throw new Error("Select Head/Neck AIS."); row[MAP_CLINICAL_BASE.ais] = String(ais); }
+        if (hasMyd) {
+          if(!myd) throw new Error("Select Bilateral Mydriasis.");
+          row[MAP_CLINICAL_BASE.mydriasis] = encodeYesNoForMydriasis(myd);
+        }
+        if (hasNrp) {
+          if(!nre) throw new Error("Select Bilateral Non-Reactive Pupil.");
+          row[MAP_CLINICAL_BASE.nonreactive] = encodeYesNoForNonReactive(nre);
+        }
+        if (hasAIS) {
+          if(!ais) throw new Error("Select Head/Neck AIS.");
+          row[MAP_CLINICAL_BASE.ais] = String(ais);
+        }
       } else {
         row[MAP_CLINICAL_ALT.age] = age;
         row[MAP_CLINICAL_ALT.gcs] = Number(document.getElementById('gcs').value);
         if (injVisible && injurySel) row[MAP_CLINICAL_ALT.injury] = INJURY_CODE_BY_LABEL[injurySel] || String(injurySel);
-        if (hasMyd) { if(!myd) throw new Error("Select Bilateral Mydriasis."); row[MAP_CLINICAL_ALT.mydriasis] = encodeYesNoForMydriasis(myd); }
-        if (hasNrp) { if(!nre) throw new Error("Select Bilateral Non-Reactive Pupil."); row[MAP_CLINICAL_ALT.nonreactive] = encodeYesNoForNonReactive(nre); }
-        if (hasAIS) { if(!ais) throw new Error("Select Head/Neck AIS."); row[MAP_CLINICAL_ALT.ais] = String(ais); }
+        if (hasMyd) {
+          if(!myd) throw new Error("Select Bilateral Mydriasis.");
+          row[MAP_CLINICAL_ALT.mydriasis] = encodeYesNoForMydriasis(myd);
+        }
+        if (hasNrp) {
+          if(!nre) throw new Error("Select Bilateral Non-Reactive Pupil.");
+          row[MAP_CLINICAL_ALT.nonreactive] = encodeYesNoForNonReactive(nre);
+        }
+        if (hasAIS) {
+          if(!ais) throw new Error("Select Head/Neck AIS.");
+          row[MAP_CLINICAL_ALT.ais] = String(ais);
+        }
       }
 
-      // Quadriplegia: include only if present in model
+      // Quadriplegia: only if present in the model
       const vars = new Set(window.__formulaVars || []);
       const fs   = window.__factorSpec || {};
       const hasQPLinModel = vars.has("Upper_Lower_Extremities_imputed") ||
@@ -597,12 +638,13 @@
         const fs = window.__factorSpec || {};
         document.querySelectorAll('.ct-var').forEach(sel => {
           const vname = sel.dataset.var;
-          const dv = sel.value; if (!dv) throw new Error(`Select ${labelOf(vname)}.`);
+          const dv = sel.value;
+          if (!dv) throw new Error(`Select ${labelOf(vname)}.`);
           row[vname] = encodePresentAbsent(dv, vname, fs);
         });
       }
 
-      // Lab (only outcome-specific list)
+      // Labs (only the outcome-specific set)
       const labYes = document.querySelector('input[name="labAvail"]:checked')?.value === "yes";
       if (ctYes && labYes) {
         const labs = LABS_BY_OUTCOME[outcome] || [];
@@ -624,7 +666,7 @@
       return row;
     }
 
-    /* ====== Multiple model prediction & error handling ====== */
+    /* ====== Run multiple models for comparison ====== */
     function keysToRunForCompare(key){
       const base = isBaseKey(key) ? "base" : "alt";
       if (key.startsWith("clinical")) return [ `clinical_${base}` ];
@@ -659,7 +701,7 @@
       return out;
     }
 
-    /* ====== Refresh UI ====== */
+    /* ====== Refresh everything when target options change ====== */
     async function refreshAll(){
       snapshotForm();
       updateAvailLabel();
@@ -721,9 +763,8 @@
             const out = await runPredict(k, outcome, row, thr);
             const p = out.prob_14d_death?.[0];
             const y = out.pred_0_1?.[0];
-            const modelLabel = toAdaptedLabel(out.model_id || k);
             results.push({
-              key:k, model_id: modelLabel,
+              key:k, model_id: out.model_id || k,
               p: (p==null||isNaN(p)) ? null : p,
               y: (y==null) ? null : y,
               order: order[k] || 99
